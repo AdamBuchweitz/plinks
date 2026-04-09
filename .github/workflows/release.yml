@@ -107,6 +107,8 @@ jobs:
 
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
           Copy-Item "target/$target/release/plinks.exe" (Join-Path $stage "plinks.exe")
+          Copy-Item "LICENSE" (Join-Path $stage "LICENSE")
+          Copy-Item "README.md" (Join-Path $stage "README.md")
 
           Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $assetName -Force
 
@@ -122,8 +124,10 @@ jobs:
 
           mkdir -p "${stage}"
           cp "target/${target}/release/plinks" "${stage}/plinks"
+          cp LICENSE "${stage}/LICENSE"
+          cp README.md "${stage}/README.md"
 
-          tar -C "${stage}" -czf "${asset_name}" plinks
+          tar -C "${stage}" -czf "${asset_name}" plinks LICENSE README.md
 
       - name: Upload packaged artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

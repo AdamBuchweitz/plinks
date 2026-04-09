@@ -1,0 +1,27 @@
+pkgname=plinks
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='Project-local link manager with shell commands and a ratatui TUI'
+arch=('x86_64' 'aarch64')
+license=('MIT')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo')
+source=("${pkgname}-${pkgver}.tar.gz")
+sha256sums=('@SHA256@')
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  cargo build --locked --release
+}
+
+check() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  cargo test --locked
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  install -Dm755 "target/release/${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

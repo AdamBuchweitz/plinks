@@ -1,6 +1,6 @@
 [package]
 name = "plinks"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Project-local link manager with shell commands and a ratatui TUI"
 license = "MIT"

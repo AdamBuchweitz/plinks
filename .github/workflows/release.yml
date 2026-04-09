@@ -26,7 +26,7 @@ jobs:
       - name: Verify tag points to origin/main
         shell: bash
         run: |
-          git fetch origin main --depth=1
+          git fetch origin +refs/heads/main:refs/remotes/origin/main
 
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "error: release tags must point to a commit already on main" >&2
@@ -37,15 +37,7 @@ jobs:
         name: Validate tag matches Cargo.toml version
         shell: bash
         run: |
-          version="$(
-            python3 - <<'PY'
-            import pathlib
-            import tomllib
-
-            cargo_toml = pathlib.Path("Cargo.toml").read_text()
-            print(tomllib.loads(cargo_toml)["package"]["version"])
-            PY
-          )"
+          version="$(python3 -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("Cargo.toml").read_text())["package"]["version"])')"
           tag="${GITHUB_REF_NAME}"
           expected_tag="v${version}"
 

@@ -224,6 +224,32 @@ fn list_filters_and_displays_rows() {
 }
 
 #[test]
+fn ls_alias_runs_list_command() {
+    let temp = TempDir::new().unwrap();
+    let opener = RecordingOpener::new();
+
+    run(
+        &[
+            "add",
+            "docs",
+            "https://docs.rs",
+            "--alias",
+            "api",
+            "--tag",
+            "rust",
+        ],
+        temp.path(),
+        &opener,
+    )
+    .unwrap();
+
+    let output = run(&["ls", "--tag", "rust"], temp.path(), &opener).unwrap();
+    assert!(output.contains("PRIMARY"));
+    assert!(output.contains("docs"));
+    assert!(output.contains("api"));
+}
+
+#[test]
 fn remove_deletes_by_primary_only() {
     let temp = TempDir::new().unwrap();
     let opener = RecordingOpener::new();

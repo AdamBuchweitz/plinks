@@ -10,6 +10,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Command {
     Open(OpenArgs),
+    #[command(alias = "ls")]
     List(ListArgs),
     Add(AddArgs),
     Remove(RemoveArgs),

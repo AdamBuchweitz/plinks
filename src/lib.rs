@@ -17,7 +17,7 @@ use open_link::LinkOpener;
 use project_root::resolve_config_path;
 
 pub fn run(cli: Cli, cwd: &Path, opener: &dyn LinkOpener, out: &mut dyn Write) -> Result<()> {
-    match cli.command {
+    match cli.command.unwrap_or(Command::Manage) {
         Command::Open(args) => run_open(args, cwd, opener),
         Command::List(args) => run_list(args, cwd, out),
         Command::Add(args) => run_add(args, cwd, out),

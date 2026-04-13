@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
+use std::process::Command as ProcessCommand;
 
 use anyhow::Result;
 use clap::Parser;
@@ -45,6 +46,22 @@ fn load_config(path: &Path) -> Config {
         .unwrap()
         .validate_and_normalize()
         .unwrap()
+}
+
+fn help_output(args: &[&str]) -> String {
+    let output = ProcessCommand::new(env!("CARGO_BIN_EXE_plinks"))
+        .args(args)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "help command failed with status {}.\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout).unwrap()
 }
 
 #[test]
@@ -293,4 +310,89 @@ fn git_root_resolution_is_used_from_nested_directory() {
     run(&["add", "docs", "https://docs.rs"], &nested, &opener).unwrap();
 
     assert!(repo.join("project-links.toml").exists());
+}
+
+#[test]
+fn top_level_help_lists_command_summaries_and_examples() {
+    let help = help_output(&["-h"]);
+
+    assert!(help.contains("Manage shared project links from the command line or TUI"));
+    assert!(help.contains("open"));
+    assert!(help.contains("Open a saved link by primary name, alias, or tag"));
+    assert!(help.contains("list"));
+    assert!(help.contains("List saved links"));
+    assert!(help.contains("add"));
+    assert!(help.contains("Add a saved link"));
+    assert!(help.contains("remove"));
+    assert!(help.contains("Remove a saved link by primary name"));
+    assert!(help.contains("manage"));
+    assert!(help.contains("Open the interactive terminal UI"));
+    assert!(help.contains("plinks help <command>"));
+}
+
+#[test]
+fn no_args_defaults_to_manage_command() {
+    let cli = Cli::parse_from(["plinks"]);
+    assert!(cli.command.is_none());
+}
+
+#[test]
+fn add_help_explains_primary_name_and_options() {
+    let help = help_output(&["add", "-h"]);
+
+    assert!(
+        help.contains("Add a saved link"),
+        "unexpected add help output:\n{help}"
+    );
+    assert!(
+        help.contains("PRIMARY_NAME"),
+        "unexpected add help output:\n{help}"
+    );
+    assert!(help.contains("URL"), "unexpected add help output:\n{help}");
+    assert!(
+        help.contains("Stable primary name for the link"),
+        "unexpected add help output:\n{help}"
+    );
+    assert!(
+        help.contains("Additional name that can also be used with `plinks open`"),
+        "unexpected add help output:\n{help}"
+    );
+    assert!(
+        help.contains("Tag used to group links"),
+        "unexpected add help output:\n{help}"
+    );
+    assert!(
+        help.contains("plinks add docs https://docs.rs --alias api --tag rust"),
+        "unexpected add help output:\n{help}"
+    );
+}
+
+#[test]
+fn open_help_explains_name_alias_and_tag_modes() {
+    let help = help_output(&["open", "-h"]);
+
+    assert!(
+        help.contains("Open a saved link by primary name, alias, or tag"),
+        "unexpected open help output:\n{help}"
+    );
+    assert!(
+        help.contains("NAME_OR_ALIAS"),
+        "unexpected open help output:\n{help}"
+    );
+    assert!(
+        help.contains("--tag"),
+        "unexpected open help output:\n{help}"
+    );
+    assert!(
+        help.contains("Primary name or alias of the saved link to open"),
+        "unexpected open help output:\n{help}"
+    );
+    assert!(
+        help.contains("Open every saved link with this tag"),
+        "unexpected open help output:\n{help}"
+    );
+    assert!(
+        help.contains("plinks open --tag rust"),
+        "unexpected open help output:\n{help}"
+    );
 }

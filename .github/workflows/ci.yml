@@ -23,11 +23,8 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Run clippy
-        run: cargo clippy --all-targets -- -D warnings
+      - name: Run linters
+        run: ./scripts/run-linters.sh
 
   test:
     runs-on: ${{ matrix.os }}

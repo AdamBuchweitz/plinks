@@ -9,6 +9,37 @@
 - Group related links with tags.
 - Manage the file directly from the terminal with shell commands or an interactive TUI.
 
+## Build
+
+Build a development binary from the checkout:
+
+```bash
+cargo build
+```
+
+Build an optimized release binary:
+
+```bash
+cargo build --release
+```
+
+The compiled binary is written to:
+
+- `target/debug/plinks` for development builds
+- `target/release/plinks` for release builds
+
+Run the binary directly from the checkout:
+
+```bash
+cargo run -- <command>
+```
+
+Install from the local checkout into Cargo's bin directory:
+
+```bash
+cargo install --path .
+```
+
 ## Install
 
 Prebuilt binaries are published on GitHub Releases for these targets:
@@ -21,16 +52,12 @@ Each asset is target-specific. Windows, Linux, and macOS binaries are not interc
 
 Windows releases are unsigned portable `.zip` archives containing `plinks.exe`, `LICENSE`, and `README.md`. Linux and macOS releases are `.tar.gz` archives containing `plinks`, `LICENSE`, and `README.md`. Depending on local policy, Windows may show SmartScreen or other trust warnings before first launch.
 
-Build from source:
+Get command help:
 
 ```bash
-cargo install --path .
-```
-
-Or run it from the checkout:
-
-```bash
-cargo run -- <command>
+plinks --help
+plinks help add
+plinks open --help
 ```
 
 ## Usage
@@ -54,6 +81,8 @@ Open a link by primary name or alias:
 plinks open docs
 plinks open api
 ```
+
+In `plinks add docs https://docs.rs`, `docs` is the link's primary name. The primary name is the stable project-local identifier used by commands like `plinks open docs` and `plinks remove docs`.
 
 Open every link with a tag:
 
@@ -103,16 +132,22 @@ Primary names, aliases, and tags are normalized to lowercase and may contain let
 
 ## Development
 
-Build:
-
-```bash
-cargo build --release
-```
-
 Test:
 
 ```bash
 cargo test
+```
+
+Install the repository Git hooks:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+The pre-commit hook runs the same lint commands as CI:
+
+```bash
+./scripts/run-linters.sh
 ```
 
 ## Releases
@@ -136,20 +171,29 @@ Arch packaging remains a separate distribution path and is still generated with 
 
 ## Arch Linux Packaging
 
-Generate Arch packaging artifacts:
+Build the Arch distribution artifacts:
 
 ```bash
 ./scripts/build-arch-package.sh
 ```
 
-This writes the source tarball and `PKGBUILD` to `dist/arch/`.
+This writes the source tarball and `PKGBUILD` to `dist/arch/`. It is a packaging flow for Arch, separate from the normal Rust build in the `Build` section above.
 
-Build the package with `makepkg`:
+Build the package locally with `makepkg`:
 
 ```bash
 cd dist/arch
-makepkg -f
+makepkg -Cf
 ```
+
+Build and install the package with `makepkg`:
+
+```bash
+cd dist/arch
+makepkg -Csi
+```
+
+`./scripts/build-arch-package.sh` removes previously built `pkg.tar.*` artifacts in `dist/arch/`, so rerunning this sequence rebuilds the package instead of reusing an older archive.
 
 ## License
 

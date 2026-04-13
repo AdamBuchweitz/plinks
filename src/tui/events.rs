@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use super::editor::EditorState;
 use super::state::{App, Mode};
@@ -15,6 +15,10 @@ pub enum EventResult {
 }
 
 pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<EventResult> {
+    if matches!(key.kind, KeyEventKind::Release) {
+        return Ok(EventResult::None);
+    }
+
     match app.mode.clone() {
         Mode::Normal => handle_normal_mode(app, key),
         Mode::Filter => Ok(handle_filter_mode(app, key)),
@@ -154,5 +158,104 @@ fn handle_discard_confirm_mode(app: &mut App, key: KeyEvent) -> EventResult {
             EventResult::None
         }
         _ => EventResult::None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{CandidateLink, Config};
+    use crate::tui::editor::Field;
+
+    fn key(code: KeyCode) -> KeyEvent {
+        KeyEvent::new(code, KeyModifiers::empty())
+    }
+
+    fn release_key(code: KeyCode) -> KeyEvent {
+        KeyEvent::new_with_kind(code, KeyModifiers::empty(), KeyEventKind::Release)
+    }
+
+    fn sample_app() -> App {
+        let mut config = Config::default();
+        config
+            .save_link(
+                None,
+                CandidateLink::new(
+                    "docs".into(),
+                    "https://docs.rs".into(),
+                    vec!["api".into()],
+                    vec!["rust".into()],
+                    None,
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        App::new(config)
+    }
+
+    #[test]
+    fn ignores_release_events_in_filter_mode() {
+        let mut app = sample_app();
+        app.mode = Mode::Filter;
+
+        assert_eq!(
+            handle_key(&mut app, key(KeyCode::Char('a'))).unwrap(),
+            EventResult::None
+        );
+        assert_eq!(app.filter, "a");
+
+        assert_eq!(
+            handle_key(&mut app, release_key(KeyCode::Char('a'))).unwrap(),
+            EventResult::None
+        );
+        assert_eq!(app.filter, "a");
+    }
+
+    #[test]
+    fn ignores_release_events_in_editor_mode() {
+        let mut app = sample_app();
+        app.begin_new();
+
+        assert_eq!(
+            handle_key(&mut app, key(KeyCode::Char('a'))).unwrap(),
+            EventResult::None
+        );
+        let Mode::Editor(editor) = &app.mode else {
+            panic!("expected editor mode");
+        };
+        assert_eq!(editor.primary, "a");
+
+        assert_eq!(
+            handle_key(&mut app, release_key(KeyCode::Char('a'))).unwrap(),
+            EventResult::None
+        );
+        let Mode::Editor(editor) = &app.mode else {
+            panic!("expected editor mode");
+        };
+        assert_eq!(editor.primary, "a");
+    }
+
+    #[test]
+    fn ignores_release_events_for_tab_navigation() {
+        let mut app = sample_app();
+        app.begin_new();
+
+        assert_eq!(
+            handle_key(&mut app, key(KeyCode::Tab)).unwrap(),
+            EventResult::None
+        );
+        let Mode::Editor(editor) = &app.mode else {
+            panic!("expected editor mode");
+        };
+        assert_eq!(editor.active_field, Field::Url);
+
+        assert_eq!(
+            handle_key(&mut app, release_key(KeyCode::Tab)).unwrap(),
+            EventResult::None
+        );
+        let Mode::Editor(editor) = &app.mode else {
+            panic!("expected editor mode");
+        };
+        assert_eq!(editor.active_field, Field::Url);
     }
 }

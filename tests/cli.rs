@@ -274,6 +274,39 @@ fn ls_alias_runs_list_command() {
 }
 
 #[test]
+fn a_alias_runs_add_command() {
+    let temp = TempDir::new().unwrap();
+    let opener = RecordingOpener::new();
+
+    run(&["a", "docs", "https://docs.rs"], temp.path(), &opener).unwrap();
+    assert!(temp.path().join("project-links.toml").exists());
+
+    let config = load_config(&temp.path().join("project-links.toml"));
+    assert!(config.links.contains_key("docs"));
+}
+
+#[test]
+fn o_alias_runs_open_command() {
+    let temp = TempDir::new().unwrap();
+    let opener = RecordingOpener::new();
+
+    run(
+        &["add", "docs", "https://docs.rs", "--alias", "api"],
+        temp.path(),
+        &opener,
+    )
+    .unwrap();
+
+    run(&["o", "docs"], temp.path(), &opener).unwrap();
+    run(&["o", "api"], temp.path(), &opener).unwrap();
+
+    assert_eq!(
+        opener.take(),
+        vec!["https://docs.rs".to_string(), "https://docs.rs".to_string()]
+    );
+}
+
+#[test]
 fn remove_deletes_by_primary_only() {
     let temp = TempDir::new().unwrap();
     let opener = RecordingOpener::new();

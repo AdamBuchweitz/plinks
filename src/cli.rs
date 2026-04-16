@@ -17,11 +17,13 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    #[command(alias = "o")]
     #[command(about = "Open a saved link by primary name, alias, or tag")]
     Open(OpenArgs),
     #[command(alias = "ls")]
     #[command(about = "List saved links")]
     List(ListArgs),
+    #[command(alias = "a")]
     #[command(about = "Add a saved link")]
     Add(AddArgs),
     #[command(about = "Remove a saved link by primary name")]

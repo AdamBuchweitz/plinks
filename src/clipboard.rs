@@ -1,4 +1,3 @@
-use std::env;
 use std::io::{Read, Write};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::thread;
@@ -135,8 +134,8 @@ fn clipboard_command_candidates() -> Vec<ClipboardCommand> {
 
 #[cfg(all(unix, not(target_os = "macos")))]
 fn clipboard_command_candidates() -> Vec<ClipboardCommand> {
-    let has_wayland = env::var_os("WAYLAND_DISPLAY").is_some();
-    let has_x11 = env::var_os("DISPLAY").is_some();
+    let has_wayland = std::env::var_os("WAYLAND_DISPLAY").is_some();
+    let has_x11 = std::env::var_os("DISPLAY").is_some();
 
     linux_candidates_from_flags(has_wayland, has_x11)
 }
